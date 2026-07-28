@@ -61,7 +61,8 @@ Nothing structural is safe until there is something to catch regressions.
   and the dependency resolver ([plugin-architecture.md](../01-Architecture/plugin-architecture.md)).
 - **`PaymentGateway` first** — decouples the bidirectional shop↔stripe edge
   ([07-API/payments.md](../07-API/payments.md)).
-- Enforce **table-ownership isolation** (ends shared `booking_*` tables).
+- Enforce **table-ownership isolation** (makes prefix collisions impossible, not
+  just conventionally avoided).
 - Standardize money on the **`Money` value object** (converts `shop`'s DECIMAL).
 
 **Exit:** modules talk only through contracts + events; 50 modules become

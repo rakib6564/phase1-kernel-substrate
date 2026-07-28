@@ -233,11 +233,11 @@ Two anti-patterns the map forbids, both seen in today's code:
 1. **Conformist copying** — a downstream context copying an upstream record
    into its own table (the five person tables). Replaced by *referencing* the
    upstream record by id.
-2. **Shared database** — two contexts reading/writing the same tables directly
-   (`booking`, `booking-plus`, `restaurant` all `CREATE TABLE IF NOT EXISTS
-   booking_*`). Replaced by **each context owning its tables** and integrating
-   through contracts/events ([01-Architecture](../01-Architecture/) §5,
-   [ARCHITECTURE-ROADMAP.md](../ARCHITECTURE-ROADMAP.md) §5).
+2. **Shared database** — two contexts reading/writing the same tables directly.
+   Today this is avoided only by convention (each plugin uses its own prefix and
+   integrates via `*API`), with nothing enforcing it. Replaced by **each context
+   owning its tables** with *enforced* ownership, integrating through
+   contracts/events ([01-Architecture](../01-Architecture/) §5).
 
 ---
 

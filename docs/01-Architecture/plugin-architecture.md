@@ -29,9 +29,9 @@ contract. The concrete problems this document fixes, from the
 |---|---|---|
 | `works_better_with` is an **advisory** hint with no enforcement | A module activates against a missing dependency and fails at runtime | `requires[]` capabilities with version constraints — a missing provider **refuses activation** (§5) |
 | `shipping-flat-rate` and `flat-rate-shipping` both register `shop_shipping_rate` | Silent last-one-wins; "activate at most one" is a *README warning* | `provides[]` capabilities; two providers of one capability is **refused at boot** ([kernel §2.5](kernel.md#25-resolution-rules-invariants)) |
-| `booking` + `booking-plus` both reach for `booking_*` tables | Cross-plugin table collisions; ownership is ambiguous | **Table-ownership isolation** — one prefix, one owner, enforced (§6) |
+| **Nothing prevents** two plugins from colliding on a table prefix — table ownership is convention, not enforced (today each plugin does own its own prefix, but a collision would be undetected) | A future collision would make ownership ambiguous and let one plugin's uninstall drop another's tables | **Table-ownership isolation** — one prefix, one owner, enforced (§6) |
 | `activate()` runs a permission-registration loop that no longer wires anything | Dead code; permissions actually come from the manifest union | Permissions are **declared in the manifest** and merged into the boot-cache union; authorization is the pipeline's single decision point (§4.4, §7) |
-| Install order decides which schema wins | Non-deterministic activation; "it worked on my install" | **Topological** activation order from the capability graph (§5) |
+| Boot/activation order is unmanaged (a consumer can boot before the provider it needs) | Non-deterministic activation; "it worked on my install" | **Topological** activation order from the capability graph (§5) |
 | `boot()` mixes wiring, schema self-heal, and hook registration | Untestable, eager, order-fragile | Lifecycle **phases** separate schema (migrations) from wiring (`register()`) from static data (manifest) (§3) |
 | Registry row + `plugin.json` read + JSON decode **every request** | Death-by-a-thousand-cuts boot cost | Manifests compiled once into the [boot cache](kernel.md#4-the-boot-cache) |
 
@@ -382,11 +382,14 @@ by default — it is a **contract**: one prefix, one owning module, enforced.
 - **WHAT:** each module declares `owns.tables` (or a `owns.prefix`, e.g. `shop_`).
   A module may read and write **only** tables it owns. The resolver rejects two
   modules claiming the same table/prefix (**TableOwnershipConflict**, §5.1).
-- **WHY — the `booking_*` collisions:** today `booking` and `booking-plus` both
-  reach into `booking_*` tables, so ownership is ambiguous and a schema change in one
-  silently breaks the other. This is a direct violation of invariant 1 ("no module
-  references another module's class or **table**"). Declared ownership makes the
-  boundary checkable.
+- **WHY — ownership is convention, not enforced:** today each plugin *does* own its
+  own prefix (`booking_*`, `bookingplus_*`, `restaurant_*`) and reaches other
+  plugins only through their `*API` (e.g. `booking-plus` uses `BookingAPI`, never
+  `booking`'s tables). But **nothing enforces this** — two plugins could claim the
+  same table/prefix and the collision would be undetected, making ownership
+  ambiguous and letting one plugin's schema change or uninstall break another.
+  Declared ownership makes invariant 1 ("no module references another module's class
+  or **table**") checkable instead of hopeful.
 - **HOW:** the [base repository](../11-Database/) a module resolves is **scoped to
   that module's owned tables**; a query against an unowned table is a boundary
   violation caught in review and, eventually, by tooling (the same enforcement path
@@ -423,7 +426,7 @@ tenancy is *which tenant's rows*. Both are enforced by the same base repository.
 | Defect (AUDIT / roadmap) | Root cause | Fix in this document |
 |---|---|---|
 | Advisory-only `works_better_with` | A *hint*, never enforced | `requires[]` capabilities + version constraints; resolver **refuses** activation on an unmet/incompatible requirement (§4.2, §5.2) |
-| `booking_*` cross-plugin table collisions | Ambiguous, undeclared table ownership | `owns.tables` per module; **TableOwnershipConflict** refusal; base repository scopes to owned tables; cross-module needs go through capability/event (§6) |
+| Unenforced table-prefix ownership (no current collision, but nothing prevents one) | Ambiguous, undeclared table ownership | `owns.tables` per module; **TableOwnershipConflict** refusal; base repository scopes to owned tables; cross-module needs go through capability/event (§6) |
 | Dead `activate()` permission loop | Imperative registration that no longer wires anything; permissions really come from the manifest union | Permissions **declared** in `permissions[]`, merged into the boot-cache union; the **pipeline** is the single authorization decision point — no per-module auth loop (§4.4) |
 
 Each is the same move: **replace a convention with a declared, enforced contract**,

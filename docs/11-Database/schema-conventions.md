@@ -54,8 +54,10 @@ the predicate; the column existing everywhere is what makes that possible.
 ## 6. Ownership (invariant #1)
 
 A module's migrations create/alter/drop **only** tables under its own prefix.
-Shared tables across modules (today's `booking_*` across three plugins) are
-prohibited; a shared concept becomes a capability or an event, not a shared table.
+Shared tables across modules are prohibited (a shared concept becomes a capability
+or an event, not a shared table). Today ownership holds by convention — each plugin
+uses its own prefix — but nothing *enforces* it; declared ownership makes a prefix
+collision impossible rather than merely unlikely.
 
 ## 7. Soft-delete & audit
 

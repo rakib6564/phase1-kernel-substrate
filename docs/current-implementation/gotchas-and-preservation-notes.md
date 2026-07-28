@@ -38,9 +38,14 @@ breaks production. The formal "must-not-change" list is in
 
 - **`works_better_with` is advisory only**, never enforced. No hard inter-plugin
   dependency/version system. `requires_core` is the only enforced constraint.
-- **Cross-plugin table ownership:** `booking`, `booking-plus`, `restaurant` all
-  `CREATE TABLE IF NOT EXISTS booking_*`. Install order decides schema; uninstall
-  can drop another plugin's tables.
+- **Table ownership is convention, not enforced.** *Verified:* each plugin owns its
+  own prefix (`booking`→`booking_*`, `booking-plus`→`bookingplus_*`,
+  `restaurant`→`restaurant_*`); none creates, alters, drops, or directly queries
+  another's tables (`booking-plus` reaches booking only via `BookingAPI`). **But
+  nothing prevents a future prefix collision** — two plugins claiming the same table
+  would be undetected. (Note: an earlier assessment wrongly claimed these plugins
+  *share* `booking_*` tables; the `install.sql`/`uninstall.sql` do not — corrected
+  here.)
 - **`activate()` permission loop is a dead no-op** (`PluginLoader.php` ~:422–433).
   Perms surface via `Auth::knownPermissions()` reading `manifest_json`. Don't "fix"
   the loop.
@@ -143,8 +148,9 @@ breaks production. The formal "must-not-change" list is in
 
 ## Top hazards if forgotten
 
-(1) `/slate/` sub-path; (2) manual tenant scoping; (3) shared `booking_*` tables;
-(4) money DECIMAL-vs-cents; (5) `backdrop-filter` on `.app-panel`; (6)
+(1) `/slate/` sub-path; (2) manual tenant scoping; (3) unenforced table-prefix
+ownership (no current collision); (4) money DECIMAL-vs-cents; (5) `backdrop-filter`
+on `.app-panel`; (6)
 `slate_brand_accent_emit()` ordering; (7) payment-completion hardening; (8)
 `media-library` required shim; (9) dead `activate()` perm loop; (10)
 `email_verified` ≠ auth. Full contract: [load-bearing-behaviors.md](load-bearing-behaviors.md).

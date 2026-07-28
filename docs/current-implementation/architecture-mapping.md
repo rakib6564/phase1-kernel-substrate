@@ -56,7 +56,7 @@ one working meanwhile. Its job is to prevent two failure modes: (1) someone
 
 | Current | Future | Phase | Migration | Compatibility |
 |---|---|---|---|---|
-| `BookingAPI` (global) | `Slate\Module\Booking` (`BookingService` + repositories) on Contacts/Money/Payments | 3 | Rebuild on SDK + contracts; migrate `booking_*` ownership | `class_alias('BookingAPI', …)` until callers move to `booking@1` |
+| `BookingAPI` (global) | `Slate\Module\Booking` (`BookingService` + repositories) on Contacts/Money/Payments | 3 | Rebuild on SDK + contracts; move `booking_*` into the module (ownership already sole) | `class_alias('BookingAPI', …)` until callers move to `booking@1` |
 | `ShopAPI` (global, DECIMAL) | `Slate\Module\Shop` (Money-based; `PaymentGateway`) | 3 | Rebuild on SDK; decouple from stripe; convert money | `class_alias('ShopAPI', …)`; storefront preserved |
 | `MembershipAPI` (reuses `customer_id`) | `Slate\Module\Membership` (`membership@1`) | 3 | Rebuild on SDK; consume Identity/Payments/`booking@1` | `class_alias`; integration filters preserved |
 | `StripePaymentAPI` (+ shop coupling) | `Slate\Services\Payments` (`PaymentGateway`) — **decoupled** | 3 | Extract gateway; consumers reconcile via `payment.succeeded` | `class_alias('StripePaymentAPI', …)` until consumers move to the contract |

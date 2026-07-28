@@ -6,8 +6,10 @@
 
 Modules must cooperate (membership needs payments; coaching needs membership;
 shop needs shipping) but today they do so by calling each other's concrete global
-classes guarded by `class_exists`, creating bidirectional coupling (shop↔stripe)
-and even sharing tables (`booking_*` across three plugins). This doesn't scale and
+classes guarded by `class_exists` — even **bidirectionally** (`stripe-payment`'s
+public endpoints hard-depend on `ShopAPI`, so the "generic" gateway isn't
+consumer-agnostic). Coupling is name-based and unversioned, and table ownership is
+convention-only (nothing prevents a future prefix collision). This doesn't scale and
 makes modules non-independent.
 
 ## Decision

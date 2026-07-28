@@ -31,9 +31,11 @@ plugin onto core Identity, Payments, and the render stack.
 ## Owns
 
 - `booking_services`, `_providers`, `_resources`, `_appointments`, `_availability`,
-  `_addons`, `_service_fields`, … (slug-prefixed, **owned solely by this module** —
-  the shared `booking_*` collision with restaurant/booking-plus is resolved by
-  ownership, [ADR-0005](../14-ADR/0005-events-and-contracts-for-modules.md)).
+  `_addons`, `_service_fields`, … (slug-prefixed, **owned solely by this module**).
+  `booking-plus` and `restaurant` own their *own* prefixes (`bookingplus_*`,
+  `restaurant_*`) and reach booking only via `BookingAPI` — declared table ownership
+  keeps it that way and makes a future prefix collision impossible
+  ([ADR-0005](../14-ADR/0005-events-and-contracts-for-modules.md)).
 - **Does NOT own:** the customer (Contact + booking profile on `contact_id`, never
   a `booking_customers` copy), payments (gateway + ledger), reminders' transport.
 
