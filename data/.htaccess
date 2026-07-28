@@ -1,0 +1,5 @@
+# data/ holds the app log and other runtime files — never web-served.
+# Belt-and-suspenders: the root .htaccess RedirectMatch rules are
+# anchored at the server root and don't fire when Slate is deployed in
+# a subdirectory, so block here directly too.
+Require all denied

@@ -1,0 +1,75 @@
+# ============================================================
+# Slate — Apache config
+# ============================================================
+# Slate uses direct file routing for admin/, customer/, install.php
+# etc. The mod_rewrite block at the bottom routes:
+#   1. /shop/*    → plugins/shop/storefront/router.php  (legacy)
+#   2. anything else that isn't a real file/dir → public.php
+#      which delegates to PublicRouter (includes/PublicRouter.php).
+# Plugins register their public prefixes via the `public_routes` filter.
+# ============================================================
+
+# Refuse to follow symlinks (defense vs symlink attacks on shared hosts)
+Options -Indexes -FollowSymLinks +SymLinksIfOwnerMatch
+
+# UTF-8 default
+AddDefaultCharset UTF-8
+
+# Branded error pages (relative to RewriteBase below)
+ErrorDocument 403 /slate/403.php
+ErrorDocument 404 /slate/404.php
+ErrorDocument 500 /slate/500.php
+
+# ── Block sensitive files at the root ───────────────────────
+<FilesMatch "^\.env|composer\.json|composer\.lock|README\.md|INSTALL\.md|ARCHITECTURE\.md|CONTRIBUTING\.md|CHANGELOG\.md$">
+    Require all denied
+</FilesMatch>
+
+# Block any dotfile (.git, .htaccess, etc.) from being served
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Block direct access to includes/, db/, scripts/, docs/, data/
+RedirectMatch 403 ^/includes/
+RedirectMatch 403 ^/db/
+RedirectMatch 403 ^/scripts/
+RedirectMatch 403 ^/docs/
+RedirectMatch 403 ^/data/
+
+# ── Security headers ────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    # Frame-deny everywhere EXCEPT embed requests (?embed=1), so forms/shop can
+    # be iframed on customer sites. ap_expr reads the request query string.
+    Header always set X-Frame-Options "SAMEORIGIN" "expr=%{QUERY_STRING} !~ /(^|&)embed=1/"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # HSTS (only enable once your TLS is confirmed working)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# ── Compression ─────────────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /slate/
+
+    # Don't rewrite real files or directories — they're served direct.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Legacy: Shop's storefront router has its own .htaccess style entry.
+    # Keep this for back-compat; new plugins use the public_routes filter.
+    RewriteRule ^shop/?$               plugins/shop/storefront/router.php?_path= [L,QSA]
+    RewriteRule ^shop/(.+)$            plugins/shop/storefront/router.php?_path=$1 [L,QSA]
+
+    # Generic public-router catch-all. Anything that isn't a file/dir
+    # and didn't match an earlier rule lands here. PublicRouter then
+    # checks the public_routes filter for a registered prefix.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+)$                 public.php?_path=$1 [L,QSA]
+</IfModule>

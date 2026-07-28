@@ -1,0 +1,31 @@
+# ── Secrets & environment (NEVER commit) ─────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Runtime data (not source; stays on disk, just untracked) ─
+/uploads/
+/error_log
+error_log
+*.log
+.installed
+
+# ── Build artifacts / packaged plugins ───────────────────────
+/plugins/_dist/
+/plugins/*.zip
+
+# ── Scratch / temp / editor ──────────────────────────────────
+/scratchpad/
+*.bak
+*.tmp
+*~
+.DS_Store
+.idea/
+.vscode/
+
+# ── Dependencies fetched by tooling (PHPMailer vendored copy is
+#    kept intentionally — see composer.json; do NOT ignore vendor/) ─
+node_modules/
+
+# ── Test output ──────────────────────────────────────────────
+/tests/.out/
