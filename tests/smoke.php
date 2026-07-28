@@ -44,6 +44,10 @@ foreach (['Database','Auth','Hook','PluginLoader','I18n','AuditLog'] as $cls) {
 check('SLATE_VERSION defined', defined('SLATE_VERSION'));
 check('SLATE_URL defined',     defined('SLATE_URL'));
 
+// ── PSR-4 autoloader wired into bootstrap (Phase 1 A1.2) ─────
+check('Slate PSR-4 autoloader registered via config.php', defined('SLATE_AUTOLOAD_REGISTERED'));
+check('Slate\\Kernel\\Ping autoloads through bootstrap',   class_exists(\Slate\Kernel\Ping::class));
+
 // ── Database connectivity (read-only) ────────────────────────
 try {
     $one = Database::query('SELECT 1 AS n')->fetch();

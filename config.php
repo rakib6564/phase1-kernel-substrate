@@ -60,6 +60,14 @@ define('DB_CHARSET', env('DB_CHARSET', 'utf8mb4'));
 
 // ── Core includes ────────────────────────────────────────────
 
+// -- Slate PSR-4 autoloader (Slate\ -> src/) + backward-compat aliases.
+//    Phase 1 A1. ADDITIVE: registers autoloading for new Slate\* classes and,
+//    as core classes migrate, bridges their old global names via class_alias so
+//    existing code and every plugin keep working. Loaded before the legacy
+//    require_once chain so both resolve. See docs/03-Standards/platform-foundation.md §4.
+require_once SLATE_ROOT . '/src/autoload.php';
+require_once SLATE_ROOT . '/src/compat/aliases.php';
+
 // -- PHPMailer loader
 $_pm = __DIR__."/vendor/phpmailer/phpmailer/src";
 if (is_dir($_pm)) { foreach (["Exception.php","OAuthTokenProvider.php","PHPMailer.php","SMTP.php"] as $_pmf) { if (file_exists($_pm."/".$_pmf)) require_once $_pm."/".$_pmf; } }
