@@ -11,6 +11,9 @@ a thing*; the kernel and services are *what every module reuses*.
 
 ## Catalogue
 
+**Modules (verticals)** — own a bounded domain, live under `Slate\Module\*`
+([Foundation Standard §1](../03-Standards/platform-foundation.md)):
+
 | Module | Context | Consumes | Provides |
 |---|---|---|---|
 | [Website/CMS](website-cms.md) | Content | Rendering, Blocks, SEO, Media | pages, posts, menus, content blocks |
@@ -20,8 +23,20 @@ a thing*; the kernel and services are *what every module reuses*.
 | [CRM](crm.md) | Identity | Identity, Events | pipeline/activities on Contacts |
 | [LMS](lms.md) | Content+Commerce | Identity, Content, Payments | courses, enrollments, `course.*` events |
 | [Forms](forms.md) | Communication | Data, Notifications, Events, Blocks | form block, `form.submitted` |
-| [Notifications](notifications.md) | Communication | Events, Queue | `NotificationChannel` drivers |
-| [Search](search.md) | Cross-cutting | Data | `SearchIndex` capability + drivers |
+
+**Core services documented here for discoverability** — these are **not modules**;
+they live under `Slate\Services\*` and expose a contract every module may consume.
+They are specified in this section only because modules interact with them heavily:
+
+| Core service | Namespace | Contract | Documented in |
+|---|---|---|---|
+| Notifications | `Slate\Services\Notifications` | `NotificationChannel` | [notifications.md](notifications.md) |
+| Search | `Slate\Services\Search` | `SearchIndex` | [search.md](search.md) |
+
+> Media, SEO, and Assets are likewise **core services** (`Slate\Services\Media`,
+> `\Seo`, `\Assets`); their behaviour is documented where it is consumed
+> ([05-Rendering](../05-Rendering/)). The rule: a **module** owns a vertical and
+> its tables; a **core service** exposes a cross-cutting capability via a contract.
 
 ---
 

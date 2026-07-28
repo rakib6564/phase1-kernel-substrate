@@ -1,5 +1,11 @@
 # Slate — Architecture Assessment & Long-Term Roadmap
 
+> **Superseded / absorbed.** This early assessment has been folded into the
+> Documentation Hub and is kept only as a historical artifact. The normative
+> roadmap now lives in [09-Roadmap](09-Roadmap/) (refactor + implementation), and
+> the current-state audit in [AUDIT-BRIEFING.md](AUDIT-BRIEFING.md). It is **not**
+> part of the frozen Slate Platform Architecture v1.0 spec.
+
 **Prepared:** 2026-07-27
 **Question on the table:** Can today's core carry 10–15 years of modules
 (business sites, booking, CRM, membership, eCommerce, LMS, SaaS), and what

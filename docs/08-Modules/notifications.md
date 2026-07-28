@@ -10,8 +10,11 @@ platform service other modules use instead of calling SMTP/Twilio directly.
 
 ## Bounded context
 
-**Communication** ([02-Domain](../02-Domain/)). (Partly a core service, packaged as
-a module for its channel drivers and templates.)
+**Communication** ([02-Domain](../02-Domain/)). This is a **core service**
+(`Slate\Services\Notifications`), **not a module** — it exposes the
+`NotificationChannel` contract that any module may consume. It is documented in the
+Modules section only because modules interact with it heavily
+([README §Catalogue](README.md)).
 
 ## Consumes
 

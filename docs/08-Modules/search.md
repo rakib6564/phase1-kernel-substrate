@@ -11,7 +11,10 @@ from one place.
 
 ## Bounded context
 
-**Cross-cutting** ([02-Domain](../02-Domain/)) — a capability more than a vertical.
+**Cross-cutting** ([02-Domain](../02-Domain/)). This is a **core service**
+(`Slate\Services\Search`), **not a module** — it exposes the `SearchIndex` contract
+every module indexes into. It is documented in the Modules section only because
+modules interact with it heavily ([README §Catalogue](README.md)).
 
 ## Consumes
 
