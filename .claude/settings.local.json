@@ -650,7 +650,10 @@
       "Bash(php tests/smoke.php)",
       "Bash(git init *)",
       "Bash(git config *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(grep -E '^uploads/|^error_log$|\\\\.zip$|^plugins/_dist/')",
+      "Bash(git commit *)",
+      "Bash(git branch *)"
     ]
   }
 }

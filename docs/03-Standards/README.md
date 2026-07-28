@@ -4,8 +4,10 @@
 
 These are the rules for *how Slate code is written* — style, naming, structure,
 error handling, security defaults, and the ban on ambient global state. They are
-normative: a change that violates a MUST here does not merge. Module-specific
-obligations extend these in
+normative: a change that violates a MUST here does not merge. The permanent
+**namespace strategy, `src/` layout, and autoloading conventions** are specified
+once in [platform-foundation.md](platform-foundation.md) (ADR-0013).
+Module-specific obligations extend these in
 [module-development-standards.md](module-development-standards.md); versioning and
 the backward-compatibility policy are in
 [versioning-and-compatibility.md](versioning-and-compatibility.md).

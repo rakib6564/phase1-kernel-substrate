@@ -226,6 +226,7 @@ alternatives, and consequences. The founding set:
 | ADR-0010 | Migration framework over `ensureSchema()` self-heal |
 | ADR-0011 | `Money` value object (integer minor units) platform-wide |
 | ADR-0012 | Swappable driver interfaces (cache/queue/tenancy/search) for shared-hosting↔enterprise |
+| ADR-0013 | Namespace strategy & `src/` layout (`Slate\…` → `src/`, 10 layer-aligned namespaces) |
 
 ---
 
