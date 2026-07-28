@@ -25,22 +25,24 @@ the *actual* system, and so nothing tacit is lost when implementation begins.
 | [architecture-mapping.md](architecture-mapping.md) | ✅ Current → future component, by phase |
 | [compatibility-matrix.md](compatibility-matrix.md) | ✅ Bridges, mechanisms, planned retirement |
 
-**As-built encyclopedia (built from code extraction):**
+**As-built encyclopedia (built from code extraction). Scope decision: "essentials,
+then freeze" — the ✅ set is authored; the remaining docs are filled on demand as
+Phase 1 reveals need.**
 
-| Doc | Covers |
-|---|---|
-| core-structure.md | Folder/dir structure with ownership; **core class inventory** + responsibilities |
-| bootstrap-and-lifecycle.md | Entry points, `config.php` boot order, request → response, DI/registration flow |
-| database-as-built.md | Full current schema, table ownership (core vs plugin), relationships, tenant handling, migration risks |
-| plugin-system-as-built.md | Real lifecycle, manifest shape, boot/registration, load order |
-| runtime-catalogues.md | **Hook catalogue**, route catalogue (admin/customer/public/API), cron |
-| rendering-as-built.md | Rendering pipeline, Theme Engine, Block system, Section/layout, templates |
-| admin-and-portal.md | Admin architecture + Customer portal as built |
-| services-as-built.md | Each current service (auth, rbac, settings, media, i18n, notifications, …) |
-| modules-as-built.md | Per-plugin inventory (purpose/tables/routes/perms/hooks/events/APIs/deps/problems/migration plan) for all 19 |
-| security-as-built.md | Every security control currently implemented |
-| performance-as-built.md | Real bottlenecks, existing caching, scalability limits |
-| technical-debt.md | Known debt, known issues, developer notes, refactor candidates |
+| Doc | Status | Covers |
+|---|---|---|
+| [database-as-built.md](database-as-built.md) | ✅ | Full schema, ownership, relationships, tenant handling, migration risks |
+| [runtime-catalogues.md](runtime-catalogues.md) | ✅ | Hook catalogue (43), routes, cron, permissions |
+| [modules-as-built.md](modules-as-built.md) | ✅ | Per-plugin inventory for all 19 (tables/routes/perms/hooks/APIs/deps/problems/migration) |
+| [plugin-system-as-built.md](plugin-system-as-built.md) | ✅ | Lifecycle, boot sequence, manifest, load order, dependency handling |
+| [security-as-built.md](security-as-built.md) | ✅ | Every security control implemented + gaps |
+| [technical-debt.md](technical-debt.md) | ✅ | Debt register, known issues, developer notes, refactor candidates |
+| core-structure.md | on demand | Folder/dir structure + core class inventory |
+| bootstrap-and-lifecycle.md | on demand | Entry points, `config.php` boot order, request → response |
+| services-as-built.md | on demand | Each current service in depth |
+| rendering-as-built.md | on demand | Rendering pipeline, Theme, Block system, layout, templates |
+| admin-and-portal.md | on demand | Admin architecture + Customer portal |
+| performance-as-built.md | on demand | Bottlenecks, caching, scalability limits (summary lives in technical-debt.md) |
 
-The preservation & migration set is authored; the encyclopedia is built section by
-section from direct code extraction (grep/read) so it is accurate, not inferred.
+The preservation & migration set and the essential encyclopedia are authored from
+direct code extraction (grep/read) so they are accurate, not inferred.
