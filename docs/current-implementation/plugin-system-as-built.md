@@ -49,7 +49,7 @@ Called once per request from `config.php` (guarded by a static `$booted` flag):
 
 **Cost per request:** 1 `plugins` SELECT + N × (`plugin.json` read + JSON decode +
 `version_compare`) + each plugin's 1–2 `settings` reads in `boot()`. **No boot
-cache.** This is the #1 steady-state perf item ([performance-as-built.md](performance-as-built.md)).
+cache.** This is the #1 steady-state perf item ([technical-debt.md](technical-debt.md) S9).
 
 ## 4. Registration is imperative (in `boot()`)
 
@@ -125,5 +125,5 @@ passes is guaranteed to install). Pre-built ZIPs live in `plugins/_dist/`
 
 ## Related
 
-- [runtime-catalogues.md](runtime-catalogues.md) · [modules-as-built.md](modules-as-built.md) · [bootstrap-and-lifecycle.md](bootstrap-and-lifecycle.md)
+- [runtime-catalogues.md](runtime-catalogues.md) · [modules-as-built.md](modules-as-built.md) · [technical-debt.md](technical-debt.md)
 - Target: [../01-Architecture/plugin-architecture.md](../01-Architecture/plugin-architecture.md) · [../06-SDK/manifest.md](../06-SDK/manifest.md)

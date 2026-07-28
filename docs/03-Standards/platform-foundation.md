@@ -1,6 +1,6 @@
 # 03 — Core Platform Foundation Standard
 
-**Status:** Draft → *freeze as **Platform Foundation v1.0** after review* ·
+**Status:** **Accepted / Frozen — Platform Foundation v1.0** (2026-07-27) ·
 **Applies to:** Slate v1.x → v5.x · **Canonical foundational reference**
 
 This is the single authoritative description of how Slate is structured at the

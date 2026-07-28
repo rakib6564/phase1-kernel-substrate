@@ -129,10 +129,22 @@ The core requirement: this must not rot after a few months.
 
 ---
 
-## Document status
+## Document status — FROZEN
 
-This set was established 2026-07-27 as the founding architecture reference. All
-documents begin as **Draft** pending review; promote to **Accepted** as each is
-ratified. The current-state audit that motivated it lives in
-[AUDIT-BRIEFING.md](AUDIT-BRIEFING.md); the incremental path is in
-[09-Roadmap](09-Roadmap/).
+> **Slate Platform Architecture v1.0 — Status: Accepted / Frozen (2026-07-27).**
+> Validated end-to-end (see [ARCHITECTURE-VALIDATION-REPORT.md](ARCHITECTURE-VALIDATION-REPORT.md),
+> verdict PASS) and tagged `architecture-v1.0`. This hub (root `README.md` +
+> sections `00`–`15`, all 13 ADRs, and the Core Platform Foundation Standard) is
+> now the **single source of truth** for implementation.
+>
+> **From this point forward:**
+> - Architectural changes require an **[ADR](14-ADR/)** (amend-first — the doc
+>   changes in the same commit as the code).
+> - No undocumented structural decisions.
+> - All code follows the [Foundation Standard](03-Standards/platform-foundation.md)
+>   and passes the reviewer checklist / conformance checks.
+
+**Companion, living (not frozen):** the [Current Implementation Reference](current-implementation/)
+tracks the code *as built* and evolves with it; [AUDIT-BRIEFING.md](AUDIT-BRIEFING.md)
+and [ARCHITECTURE-ROADMAP.md](ARCHITECTURE-ROADMAP.md) are historical. The
+incremental path from as-built to the frozen target is [09-Roadmap](09-Roadmap/).
