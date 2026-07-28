@@ -1,0 +1,28 @@
+<?php
+/**
+ * Slate — backward-compatibility class aliases.
+ *
+ * As core classes migrate out of `includes/` into `Slate\*` namespaces (Phase 1
+ * workstream A), each one registers a `class_alias` here so its **old global
+ * name keeps resolving**. This is the promise that keeps the live site and every
+ * installed plugin working unchanged — every `require_once`, every
+ * `Database::query(...)`, and every plugin's `class_exists('BookingAPI')` keeps
+ * returning the same answer.
+ *
+ * See docs/03-Standards/platform-foundation.md §10 and
+ * docs/current-implementation/compatibility-matrix.md.
+ *
+ * These aliases are a COVERED compatibility surface — removed only in a future
+ * major, never during Phase 1. Loaded at bootstrap immediately after the
+ * autoloader.
+ *
+ * Phase 1 A1: intentionally EMPTY — no class has migrated yet. Entries are added
+ * one at a time as each core class moves (leaf-first: Hook, I18n, AuditLog, …),
+ * each with a smoke-tested commit.
+ */
+
+declare(strict_types=1);
+
+// (No aliases yet — populated as core classes migrate in A3+.)
+// Example of the shape a future migration adds:
+//   class_alias(\Slate\Data\Database::class, 'Database');
