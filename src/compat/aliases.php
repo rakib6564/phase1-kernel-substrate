@@ -29,3 +29,4 @@ class_alias(\Slate\Services\I18n\I18n::class, 'I18n');  // was includes/I18n.php
 class_alias(\Slate\Services\Audit\AuditLog::class, 'AuditLog'); // was includes/AuditLog.php
 class_alias(\Slate\Services\Notifications\Notifications::class, 'Notifications'); // was includes/Notifications.php
 class_alias(\Slate\Services\Media\Uploads::class, 'Uploads'); // was includes/Uploads.php
+class_alias(\Slate\Services\Media\Media::class, 'Media'); // was includes/Media.php
