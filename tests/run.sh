@@ -5,5 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 echo "== Slate unit tests =="
 php tests/unit/run.php
+echo "== Slate integration tests =="
+php tests/integration/run.php
 echo "== Slate smoke tests =="
 php tests/smoke.php
