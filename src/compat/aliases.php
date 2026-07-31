@@ -23,6 +23,5 @@
 
 declare(strict_types=1);
 
-// (No aliases yet — populated as core classes migrate in A3+.)
-// Example of the shape a future migration adds:
-//   class_alias(\Slate\Data\Database::class, 'Database');
+// A3 — core classes migrated so far (leaf-first). Each keeps its old global name.
+class_alias(\Slate\Kernel\Event\Hook::class, 'Hook');   // was includes/Hook.php
