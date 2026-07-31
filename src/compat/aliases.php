@@ -34,3 +34,4 @@ class_alias(\Slate\Services\Notifications\Mailer::class, 'Mailer'); // was inclu
 class_alias(\Slate\Kernel\Http\PublicRouter::class, 'PublicRouter'); // was includes/PublicRouter.php
 class_alias(\Slate\Data\Database::class, 'Database'); // was includes/Database.php
 class_alias(\Slate\Services\Auth\Auth::class, 'Auth'); // was includes/Auth.php
+class_alias(\Slate\Kernel\Module\PluginLoader::class, 'PluginLoader'); // was includes/PluginLoader.php
