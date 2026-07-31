@@ -14,6 +14,10 @@ error_log
 /plugins/_dist/
 /plugins/*.zip
 /docs.zip
+/slate-root.zip
+
+# ── Local tool / editor state — never commit ─────────────────
+.claude/settings.local.json
 
 # ── Scratch / temp / editor ──────────────────────────────────
 /scratchpad/

@@ -1,6 +1,6 @@
 # 09 — Phase 1 Scope: Kernel Substrate
 
-**Status:** Draft (scoping) · **Applies to:** current codebase → Slate v1.x
+**Status:** Implemented — Phase 1 complete (pending merge to `main`) · **Applies to:** current codebase → Slate v1.x
 **Prereq:** Phase 0 complete (git + smoke suite). See [refactor-roadmap.md](refactor-roadmap.md).
 
 Phase 1 builds the invisible foundation everything else rides on: **PSR-4
@@ -129,16 +129,27 @@ when the smoke suite is green and the changes are reviewed.
 
 ## Definition of done (Phase 1)
 
-- [ ] PSR-4 autoloader active; `src/` established; new code namespaced.
-- [ ] Core `includes/` classes moved to `Slate\…` with global alias shims;
-      plugins still boot unchanged (`class_exists` satisfied).
-- [ ] Migration framework + ledger + `bin/migrate`; core schema expressed as
-      migrations; existing installs baseline-stamped (no re-run).
-- [ ] `TenantContext`, `Repository`, `QueryBuilder`, `Money` exist with unit tests;
-      one core read proven through a repository at parity.
-- [ ] `ensureSchema()` and all plugins untouched and working.
-- [ ] Smoke suite green; grown with autoload + Money + tenancy assertions.
-- [ ] No secrets committed; `.env` still untracked.
+- [x] PSR-4 autoloader active; `src/` established; new code namespaced.
+- [x] Core `includes/` classes moved to `Slate\…` with global alias shims (11
+      classes); plugins still boot unchanged (`class_exists` satisfied — verified
+      6/6 active plugins boot, cross-plugin APIs resolve).
+- [x] Migration framework + ledger + `bin/migrate`; core schema expressed as
+      `0001_core_init`; this install baseline-stamped (no re-run).
+- [x] `TenantContext`, `Repository`, `QueryBuilder`, `Money` exist with unit tests;
+      one core read (`SettingsRepository`) proven through a repository at parity
+      with `Database::setting()`.
+- [x] `ensureSchema()` and all plugins untouched and working.
+- [x] Test suite green (74 unit / 4 integration / 21 smoke); grown with a
+      dependency-free unit tier (Money + tenancy + data-layer) and an integration
+      tier (repository parity). `smoke.php` gained the autoload assertions; Money
+      and tenancy assertions live in the new unit/integration tiers.
+- [x] No secrets committed; `.env` still untracked.
+
+**Known follow-ups (tracked as tech debt, not blockers):** `crossTenant()` audit
+sink is inert until the Phase-3 container wires it to `AuditLog`; a true empty-DB
+fresh-install migration run is unverified here (shared host denies `CREATE
+DATABASE`) though `db/schema.sql` is fully idempotent; MySQL DDL is
+non-transactional in the runner.
 
 ---
 
