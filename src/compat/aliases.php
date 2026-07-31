@@ -27,3 +27,4 @@ declare(strict_types=1);
 class_alias(\Slate\Kernel\Event\Hook::class, 'Hook');   // was includes/Hook.php
 class_alias(\Slate\Services\I18n\I18n::class, 'I18n');  // was includes/I18n.php
 class_alias(\Slate\Services\Audit\AuditLog::class, 'AuditLog'); // was includes/AuditLog.php
+class_alias(\Slate\Services\Notifications\Notifications::class, 'Notifications'); // was includes/Notifications.php
