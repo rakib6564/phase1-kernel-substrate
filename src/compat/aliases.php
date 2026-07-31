@@ -31,3 +31,4 @@ class_alias(\Slate\Services\Notifications\Notifications::class, 'Notifications')
 class_alias(\Slate\Services\Media\Uploads::class, 'Uploads'); // was includes/Uploads.php
 class_alias(\Slate\Services\Media\Media::class, 'Media'); // was includes/Media.php
 class_alias(\Slate\Services\Notifications\Mailer::class, 'Mailer'); // was includes/Mailer.php
+class_alias(\Slate\Kernel\Http\PublicRouter::class, 'PublicRouter'); // was includes/PublicRouter.php
