@@ -25,3 +25,4 @@ declare(strict_types=1);
 
 // A3 — core classes migrated so far (leaf-first). Each keeps its old global name.
 class_alias(\Slate\Kernel\Event\Hook::class, 'Hook');   // was includes/Hook.php
+class_alias(\Slate\Services\I18n\I18n::class, 'I18n');  // was includes/I18n.php
