@@ -54,6 +54,10 @@ class SitehubAPI {
     public static function http(array $site, string $method, string $path, ?array $body = null, int $timeout = 25): array {
         $token = slate_decrypt_secret($site['token']);
         $url   = self::base($site) . ltrim($path, '/');
+        // Also carry the token as a query param so auth works even when the host
+        // strips the Authorization header (LiteSpeed/FastCGI) or a security
+        // plugin intercepts Bearer auth.
+        $url  .= (strpos($url, '?') === false ? '?' : '&') . 'token=' . rawurlencode($token);
         $out   = ['ok' => false, 'code' => 0, 'data' => null, 'error' => ''];
 
         if (!function_exists('curl_init')) {
@@ -61,8 +65,10 @@ class SitehubAPI {
             return $out;
         }
         $ch = curl_init($url);
+        // Authenticate via the ?token= query param only. Sending an
+        // 'Authorization: Bearer' header makes some hosts/security layers reject
+        // the request before it reaches the plugin ('not authorized').
         $headers = [
-            'Authorization: Bearer ' . $token,
             'Accept: application/json',
         ];
         $opts = [
@@ -74,6 +80,7 @@ class SitehubAPI {
             CURLOPT_MAXREDIRS      => 3,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_USERAGENT      => 'SiteHub/1.1 (fleet-control; +https://rakibhasaan.com)',
         ];
         if ($body !== null) {
             $headers[] = 'Content-Type: application/json';
@@ -93,12 +100,14 @@ class SitehubAPI {
 
         $data = json_decode((string)$raw, true);
         $out['data'] = is_array($data) ? $data : null;
-        if ($out['code'] >= 200 && $out['code'] < 300) {
+        if ($out['code'] >= 200 && $out['code'] < 300 && is_array($data)) {
             $out['ok'] = true;
+        } elseif (!is_array($data)) {
+            // Non-JSON body: almost always an upstream block (Cloudflare/WAF
+            // challenge, or a security plugin returning an HTML page).
+            $out['error'] = 'Non-JSON response (HTTP ' . $out['code'] . ') \u2014 likely blocked by Cloudflare/WAF. Allow /wp-json/portkit/v1/* or allowlist this server IP.';
         } else {
-            $out['error'] = is_array($data) && isset($data['message'])
-                ? (string)$data['message']
-                : ('HTTP ' . $out['code']);
+            $out['error'] = isset($data['message']) ? (string)$data['message'] : ('HTTP ' . $out['code']);
         }
         return $out;
     }
@@ -170,6 +179,85 @@ class SitehubAPI {
         $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
         $r = self::http($site, 'POST', 'doctor/set-radius', ['px' => $px], 60);
         self::log($id, 'set_radius', $r['ok'], $r['error'] ?: ($px . 'px'));
+        return $r;
+    }
+
+    /* ---------------- Fleet control (RK Suite extended endpoints) ---------------- */
+
+    /** List RK Suite modules + enabled state. */
+    public static function modules(int $id): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'GET', 'modules', null, 20);
+        self::log($id, 'modules', $r['ok'], $r['error']);
+        return $r;
+    }
+
+    /** Enable/disable a module on a site. */
+    public static function moduleToggle(int $id, string $slug, bool $enable): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'POST', 'modules/toggle', ['slug' => $slug, 'enable' => $enable], 30);
+        self::log($id, 'module_toggle', $r['ok'], $r['error'] ?: ($slug . '=' . ($enable ? 'on' : 'off')));
+        return $r;
+    }
+
+    /** Health/system report (versions, updates, maintenance, https). */
+    public static function system(int $id): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'GET', 'system', null, 25);
+        self::log($id, 'system', $r['ok'], $r['error']);
+        return $r;
+    }
+
+    public static function cacheClear(int $id): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'POST', 'cache/clear', [], 40);
+        self::log($id, 'cache_clear', $r['ok'], $r['error']);
+        return $r;
+    }
+
+    public static function maintenance(int $id, bool $on): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'POST', 'maintenance', ['on' => $on], 20);
+        self::log($id, 'maintenance', $r['ok'], $r['error'] ?: ($on ? 'on' : 'off'));
+        return $r;
+    }
+
+    public static function flushPermalinks(int $id): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'POST', 'flush-permalinks', [], 30);
+        self::log($id, 'flush_permalinks', $r['ok'], $r['error']);
+        return $r;
+    }
+
+    /** List rollback snapshots on a site. */
+    public static function snapshots(int $id): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'GET', 'snapshots', null, 25);
+        self::log($id, 'snapshots', $r['ok'], $r['error']);
+        return $r;
+    }
+
+    /** Roll a site back to a snapshot token. */
+    public static function rollback(int $id, string $token): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'POST', 'rollback', ['snapshot' => $token], 120);
+        self::log($id, 'rollback', $r['ok'], $r['error'] ?: $token);
+        return $r;
+    }
+
+    /** Take an on-demand snapshot before a fleet action. */
+    public static function snapshotCreate(int $id, string $label = 'SiteHub snapshot'): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'POST', 'snapshot', ['label' => $label], 120);
+        self::log($id, 'snapshot', $r['ok'], $r['error']);
+        return $r;
+    }
+
+    /** Per-site SEO health summary (for the fleet SEO dashboard). */
+    public static function seoHealth(int $id): array {
+        $site = self::get($id); if (!$site) return ['ok' => false, 'error' => 'Unknown site.'];
+        $r = self::http($site, 'GET', 'seo/health', null, 30);
+        self::log($id, 'seo_health', $r['ok'], $r['error']);
         return $r;
     }
 
