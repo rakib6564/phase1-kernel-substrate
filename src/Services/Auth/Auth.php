@@ -395,6 +395,33 @@ class Auth {
     }
 
     // ── Customer auth ─────────────────────────────────────────
+    //
+    // Phase 2A B4 cutover: customer authentication now reads through
+    // IdentityStore (the `identities` table), and every `customers` mutation is
+    // DUAL-WRITTEN into the spine via ContactSeeder::syncCustomer so `customers`
+    // stays a valid rollback target. Signatures, the session shape
+    // ($_SESSION['slate_customer']), throttling, and timing-equalisation are
+    // unchanged. id == contact_id == old customer_id (id-preservation), so every
+    // caller and Auth::customerId() keep returning the same value.
+
+    /** A per-request IdentityStore wired to the current tenant. */
+    private static function identityStore(): \Slate\Services\Identity\IdentityStore {
+        $tenants = new \Slate\Tenancy\TenantContext();
+        return new \Slate\Services\Identity\IdentityStore(
+            $tenants,
+            new \Slate\Services\Identity\ContactRepository($tenants)
+        );
+    }
+
+    /** Dual-write mirror: keep the spine in sync after a `customers` change.
+     *  Best-effort — a mirror failure must never break the legacy write. */
+    private static function syncCustomerToSpine(int $customerId): void {
+        try {
+            (new \Slate\Services\Identity\ContactSeeder())->syncCustomer($customerId);
+        } catch (\Throwable $e) {
+            slate_log('Auth: customer→spine dual-write failed for ' . $customerId . ': ' . $e->getMessage(), 'warning');
+        }
+    }
 
     public static function attemptCustomerLogin(string $email, string $password): bool {
         self::$lastLoginThrottled = false;
@@ -403,40 +430,35 @@ class Auth {
             return false;
         }
 
-        $cust = \Database::row(
-            "SELECT * FROM customers WHERE email = ? AND tenant_id = ? AND status = 'active'",
-            [$email, current_tenant_id()]
-        );
-        if (!$cust || empty($cust['password_hash'])) {
-            self::dummyVerify($password);   // equalise timing vs. the real path
-            self::recordLoginFailure('customer', $email);
-            return false;
-        }
-        if (!password_verify($password, $cust['password_hash'])) {
+        $email = strtolower(trim($email));
+        $store    = self::identityStore();
+        $identity = $store->authenticate('password', $email, $password);
+        if ($identity === null) {
+            self::dummyVerify($password);   // equalise timing vs. the real path (incl. suspended/unknown)
             self::recordLoginFailure('customer', $email);
             return false;
         }
 
-        if (password_needs_rehash($cust['password_hash'], PASSWORD_DEFAULT)) {
-            \Database::update('customers',
-                ['password_hash' => password_hash($password, PASSWORD_DEFAULT)],
-                'id = ?', [$cust['id']]
-            );
+        $contact = $store->contactFor($identity->id);
+        if ($contact === null) {                 // defensive: identity without a contact
+            self::recordLoginFailure('customer', $email);
+            return false;
         }
 
-        \Database::update('customers', ['last_login_at' => date('Y-m-d H:i:s')], 'id = ?', [$cust['id']]);
+        // Dual-write last_login to the legacy table (rollback consistency).
+        \Database::update('customers', ['last_login_at' => date('Y-m-d H:i:s')], 'id = ?', [$contact->id]);
 
         self::startSession();
         session_regenerate_id(true);
         $_SESSION['slate_customer'] = [
-            'id'        => (int)$cust['id'],
-            'email'     => $cust['email'],
-            'name'      => $cust['name'],
-            'tenant_id' => (int)$cust['tenant_id'],
+            'id'        => $contact->id,
+            'email'     => $contact->primaryEmail,
+            'name'      => $contact->displayName,
+            'tenant_id' => $contact->tenantId,
         ];
 
         self::clearLoginFailures('customer');
-        \Hook::doAction('customer_logged_in', (int)$cust['id']);
+        \Hook::doAction('customer_logged_in', $contact->id);
         return true;
     }
 
@@ -529,6 +551,7 @@ class Auth {
             ]);
         }
 
+        self::syncCustomerToSpine($customerId);   // dual-write: mirror into contacts/identities
         \AuditLog::record('customer.registered', (string)$customerId, ['email' => $email]);
         \Hook::doAction('customer_registered', $customerId);
 
@@ -581,6 +604,7 @@ class Auth {
         \Database::update('customers', [
             'email_verified' => 1,
         ], 'id = ? AND tenant_id = ?', [$customerId, current_tenant_id()]);
+        self::syncCustomerToSpine($customerId);   // dual-write: mirror verified flag
 
         \AuditLog::record('customer.email_verified', (string)$customerId);
         \Hook::doAction('customer_email_verified', $customerId);
@@ -645,6 +669,7 @@ class Auth {
         \Database::update('customers', [
             'password_hash' => password_hash($newPassword, PASSWORD_DEFAULT),
         ], 'id = ? AND tenant_id = ?', [$customerId, current_tenant_id()]);
+        self::syncCustomerToSpine($customerId);   // dual-write: mirror new password into identities
 
         // Burn any other outstanding reset tokens for this customer.
         \Database::query(

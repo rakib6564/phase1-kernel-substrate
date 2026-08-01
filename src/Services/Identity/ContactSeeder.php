@@ -147,4 +147,84 @@ final class ContactSeeder
 
         return ['created' => $created, 'identities' => $identities, 'tokens' => $tokens, 'skipped' => $skipped];
     }
+
+    /**
+     * Idempotent UPSERT of a single customer into the spine — the dual-write
+     * mirror used by Auth after any `customers` mutation (register / reset /
+     * verify). Keeps contacts + identities in sync with `customers` so the legacy
+     * table stays a valid rollback target. ID-preserving (contact.id == customer.id).
+     * Best-effort: callers wrap it so a mirror failure never breaks the legacy write.
+     */
+    public function syncCustomer(int $customerId): void
+    {
+        $cu = Database::row('SELECT * FROM customers WHERE id = ?', [$customerId]);
+        if ($cu === null) {
+            return;
+        }
+        $tenantId = (int) $cu['tenant_id'];
+        $email = EmailAddress::normalize((string) ($cu['email'] ?? ''));
+        $phone = $cu['phone'] !== null ? PhoneNumber::normalize((string) $cu['phone']) : '';
+        $verified = !empty($cu['email_verified']) ? 1 : 0;
+
+        // contact (id preserved)
+        if (Database::value('SELECT 1 FROM contacts WHERE id = ?', [$customerId]) === null) {
+            QueryBuilder::table('contacts')->insert([
+                'id'            => $customerId,
+                'tenant_id'     => $tenantId,
+                'kind'          => Contact::KIND_PERSON,
+                'display_name'  => $cu['name'] ?? null,
+                'primary_email' => $email !== '' ? $email : null,
+                'primary_phone' => $phone !== '' ? $phone : null,
+                'status'        => Contact::STATUS_ACTIVE,
+                'created_at'    => $cu['created_at'] ?? date('Y-m-d H:i:s'),
+            ]);
+        } else {
+            Database::update('contacts', [
+                'display_name'  => $cu['name'] ?? null,
+                'primary_email' => $email !== '' ? $email : null,
+                'primary_phone' => $phone !== '' ? $phone : null,
+            ], 'id = ?', [$customerId]);
+        }
+
+        // primary email child
+        if ($email !== '') {
+            if (Database::value('SELECT 1 FROM contact_emails WHERE tenant_id = ? AND email = ?', [$tenantId, $email]) === null) {
+                QueryBuilder::table('contact_emails')->insert([
+                    'contact_id' => $customerId, 'tenant_id' => $tenantId, 'email' => $email,
+                    'is_primary' => 1, 'verified' => $verified,
+                ]);
+            } else {
+                Database::update('contact_emails', ['verified' => $verified], 'tenant_id = ? AND email = ?', [$tenantId, $email]);
+            }
+        }
+        // primary phone child (insert if missing)
+        if ($phone !== '' && Database::value('SELECT 1 FROM contact_phones WHERE contact_id = ? AND phone = ?', [$customerId, $phone]) === null) {
+            QueryBuilder::table('contact_phones')->insert([
+                'contact_id' => $customerId, 'tenant_id' => $tenantId, 'phone' => $phone, 'is_primary' => 1,
+            ]);
+        }
+
+        // password identity (only when a real login exists); hash mirrored verbatim
+        if (!empty($cu['password_hash'])) {
+            $status = ($cu['status'] ?? '') === 'suspended' ? Identity::STATUS_SUSPENDED : Identity::STATUS_ACTIVE;
+            $identityId = Database::value(
+                "SELECT id FROM identities WHERE contact_id = ? AND provider = 'password'",
+                [$customerId]
+            );
+            if ($identityId === null) {
+                QueryBuilder::table('identities')->insert([
+                    'contact_id'     => $customerId, 'tenant_id' => $tenantId,
+                    'provider'       => Identity::PROVIDER_PASSWORD, 'credential_ref' => $email,
+                    'password_hash'  => $cu['password_hash'], 'email_verified' => $verified,
+                    'status'         => $status, 'last_login_at' => $cu['last_login_at'] ?? null,
+                    'created_at'     => $cu['created_at'] ?? date('Y-m-d H:i:s'),
+                ]);
+            } else {
+                Database::update('identities', [
+                    'credential_ref' => $email, 'password_hash' => $cu['password_hash'],
+                    'email_verified' => $verified, 'status' => $status,
+                ], 'id = ?', [(int) $identityId]);
+            }
+        }
+    }
 }
